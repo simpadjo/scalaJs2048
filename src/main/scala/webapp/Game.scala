@@ -1,18 +1,26 @@
 package webapp
 
+import webapp.Game.addNewCell
+
 import scala.util.Random
+
+sealed trait MoveResult
+case class Moved(newTable: Game, finished: Boolean) extends MoveResult
+object NoEffect extends MoveResult
 
 case class Game(cells: Board, score: Int) {
 
-  def shift(dir: Direction): Option[Game] = {
-    val (rotation, backRotation) = Rotations.chooseRotations(dir)
-
-    val rotated = rotation(cells)
-
-    ShiftUtil.shiftLeft(rotated).map{ case (newBoard, plusScore) => {
-      val andBack = backRotation(newBoard)
-      Game(andBack, score + plusScore)
-    }}
+  def tryShift(dir: Direction): MoveResult = {
+    ShiftUtil.shift(cells, dir) match {
+      case Some((newBoard, plusScore)) => {
+        val withNextCell = addNewCell(newBoard)
+        val newScore = score + plusScore
+        val isFinished = Seq(Up, Down, Left, Right)
+          .exists(d => ShiftUtil.shift(withNextCell, d).isDefined)
+        Moved(Game(withNextCell, newScore), isFinished)
+      }
+      case None => NoEffect
+    }
   }
 }
 
@@ -61,6 +69,18 @@ object Game {
 
   def nextNum(): Int = {
     if (rand.nextBoolean()) 4 else 2
+  }
+
+  def addNewCell(board: Board): Board = {
+    val emptyPositions: Seq[(Int, Int)] = board.zipWithIndex.flatMap{
+      case (row, i) => {
+        row.zipWithIndex.filter(_._1.isEmpty).map(e => (i, e._2))
+      }
+    }
+    require(emptyPositions.nonEmpty)
+    val (i, j) = rand.shuffle(emptyPositions).head
+    val v = Some(nextNum())
+    board.updated(i, board(i).updated(j, v))
   }
 
 }

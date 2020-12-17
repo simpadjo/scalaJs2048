@@ -1,14 +1,15 @@
 package webapp
 
 class Model {
-  private var state: (Game, Boolean) = (Game.someTable(), false)
+  private var state: (Game, MoveResult) = (Game.someTable(), NoEffect)
 
-  def getState(): (Game, Boolean) = state
+  def getState(): (Game, MoveResult) = state
 
   def shift(direction: Direction): Unit = {
-    val st = state._1.shift(direction).getOrElse(state._1)
-    //TODO:
-    state = (st, false)
+    state = state._1.tryShift(direction) match {
+      case m @ Moved(newTable, finished) => (newTable, m)
+      case NoEffect => (state._1, NoEffect)
+    }
   }
 
 }

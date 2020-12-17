@@ -28,27 +28,30 @@ object ShiftUtil {
     go(Nil, None, row, 0)
   }
 
-  def addNewCellIfCan(row: Row): Row = {
-    if(row.last.isEmpty)
-      row.dropRight(1) :+ Some(Game.nextNum())
-    else
-      row
-  }
-
-  //TODO: factor-out randomization to make it testable
   def shiftLeft(cells: Board): Option[(Board, Int)] = {
     val res = cells.map(row => {
       val (shifted, points) = ShiftUtil.shiftLeft(row)
       val padded = shifted.map(Some(_)).padTo(boardSize, None)
       val changed = (padded != row)
 
-      (ShiftUtil.addNewCellIfCan(padded), changed, points)
+      (padded, changed, points)
     })
 
     if (res.exists(_._2)) {
       val totalpoints = res.map(_._3).sum
       Some((res.map(_._1), totalpoints))
     } else None
+  }
+
+  def shift(cells: Board, dir: Direction): Option[(Board, Int)] ={
+    val (rotation, backRotation) = Rotations.chooseRotations(dir)
+
+    val rotated = rotation(cells)
+
+    ShiftUtil.shiftLeft(rotated).map{ case (newBoard, score) => {
+      val andBack = backRotation(newBoard)
+      (andBack, score)
+    }}
   }
 
 }
