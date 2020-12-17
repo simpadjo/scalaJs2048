@@ -9,27 +9,10 @@ case class Game(cells: Board, score: Int) {
 
     val rotated = rotation(cells)
 
-    val res = Game(rotated, -1).shiftLeft().map(g => {
-      val andBack = backRotation(g.cells)
-      Game(andBack, g.score)
-    })
-
-    res
-  }
-
-  def shiftLeft(): Option[Game] = {
-    val res = cells.map(row => {
-      val (shifted, points) = ShiftUtil.shiftLeft(row)
-      val padded = shifted.map(Some(_)).padTo(boardSize, None)
-      val changed = (padded != row)
-
-      (ShiftUtil.addNewCellIfCan(padded), changed, points)
-    })
-
-    if (res.exists(_._2)) {
-      val totalpoints = score + res.map(_._3).sum
-      Some(Game(res.map(_._1), totalpoints))
-    } else None
+    ShiftUtil.shiftLeft(rotated).map{ case (newBoard, plusScore) => {
+      val andBack = backRotation(newBoard)
+      Game(andBack, score + plusScore)
+    }}
   }
 }
 
@@ -67,13 +50,12 @@ case object Right extends Direction
 object Game {
   private val rand = new Random()
 
-  def empty(): Game = {
-    Game(Seq.tabulate(4)(i => Seq.tabulate(4)(j => None)), 0)
-  }
-
-
   def someTable(): Game = {
-    Game(Seq.tabulate(4)(i => Seq(Some(2), None, Some(2), Some(4))), 0)
+    val row1 = Random.shuffle(Seq(Some(nextNum()), None, None, None))
+    val row2 = Random.shuffle(Seq(Some(nextNum()), None, None, None))
+    val emptyRow = Seq.tabulate(boardSize)(_ => None)
+    val rows = Seq(row1, row2, emptyRow, emptyRow)
+    Game(Random.shuffle(rows), 0)
   }
 
 

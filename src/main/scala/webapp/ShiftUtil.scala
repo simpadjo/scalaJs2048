@@ -35,4 +35,20 @@ object ShiftUtil {
       row
   }
 
+  //TODO: factor-out randomization to make it testable
+  def shiftLeft(cells: Board): Option[(Board, Int)] = {
+    val res = cells.map(row => {
+      val (shifted, points) = ShiftUtil.shiftLeft(row)
+      val padded = shifted.map(Some(_)).padTo(boardSize, None)
+      val changed = (padded != row)
+
+      (ShiftUtil.addNewCellIfCan(padded), changed, points)
+    })
+
+    if (res.exists(_._2)) {
+      val totalpoints = res.map(_._3).sum
+      Some((res.map(_._1), totalpoints))
+    } else None
+  }
+
 }

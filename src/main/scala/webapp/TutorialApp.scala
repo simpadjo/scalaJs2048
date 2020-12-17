@@ -19,6 +19,7 @@ object TutorialApp {
 
   def setupUI(model: Model): Unit = {
     val table = document.createElement("div")
+    table.appendChild(render(document, model.getState()._1))
     document.onkeydown =
       e => {
         onKey(document, model,table, e.key)
