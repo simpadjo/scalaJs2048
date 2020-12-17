@@ -24,6 +24,9 @@ object TutorialApp {
       , document.createElement("div")
     )
 
+    views.score.setAttribute("height", "40")
+    views.lost.setAttribute("height", "40")
+
     render(document, model, views)
 
     document.onkeydown = { e => {
@@ -62,7 +65,9 @@ object TutorialApp {
       val rowEl = document.createElement("tr")
       row.foreach(cell => {
         val cellEl = document.createElement("th")
-        cellEl.textContent = cell.fold("-")(_.toString)
+        cellEl.setAttribute("width", "20")
+        cellEl.setAttribute("height", "20")
+        cellEl.textContent = cell.fold("_")(_.toString).padTo(4, ' ')
         rowEl.appendChild(cellEl)
       })
       newTable.appendChild(rowEl)
@@ -73,7 +78,7 @@ object TutorialApp {
       views.table.removeChild(prev)
     }
     views.table.appendChild(newTable)
-    views.score.textContent = model.game.score.toString
+    views.score.textContent = s"Score: ${model.game.score.toString}"
     if (model.lost) {
       views.lost.textContent = "lost!"
     }
