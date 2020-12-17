@@ -4,32 +4,40 @@ import org.scalajs.dom
 import org.scalajs.dom.ext.KeyValue.{ArrowDown, ArrowLeft, ArrowRight, ArrowUp}
 import org.scalajs.dom.raw.Document
 import org.scalajs.dom.{Element, document}
-import webapp.{Game, Model}
 
-import scala.scalajs.js.annotation.JSExportTopLevel
+case class Views(table: Element, score: Element, lost: Element)
 
 object TutorialApp {
+  var model = Model(Game.someTable(), false)
+
   def main(args: Array[String]): Unit = {
-    val model = new Model()
 
     document.addEventListener("DOMContentLoaded", { (e: dom.Event) =>
-      setupUI(model)
+      setupUI()
     })
   }
 
-  def setupUI(model: Model): Unit = {
-    val table = document.createElement("div")
-    table.appendChild(render(document, model.getState()._1))
-    document.onkeydown =
-      e => {
-        onKey(document, model,table, e.key)
-      }
+  def setupUI(): Unit = {
+    val views = Views(
+      document.createElement("div")
+      , document.createElement("div")
+      , document.createElement("div")
+    )
 
-    document.body.appendChild(table)
+    render(document, model, views)
+
+    document.onkeydown = { e => {
+      onKey(document, views, e.key)
+    }
+    }
+
+    document.body.appendChild(views.table)
+    document.body.appendChild(views.score)
+    document.body.appendChild(views.lost)
 
   }
 
-  def onKey(document: Document, model: Model, parent: Element, key: String): Unit = {
+  def onKey(document: Document, views: Views, key: String): Unit = {
     val arrow: Option[Direction] = key match {
       case ArrowUp => Some(Up)
       case ArrowDown => Some(Down)
@@ -39,20 +47,17 @@ object TutorialApp {
     }
 
     arrow.foreach(dir => {
-      model.shift(dir)
-      val st = model.getState()
-      val newTable = render(document, st._1)
-      val prev = parent.firstElementChild
-      if (prev != null) {
-        parent.removeChild(prev)
-      }
-      parent.appendChild(newTable)
+      model.shift(dir).foreach(newModel => {
+        model = newModel
+        render(document, model, views)
+      })
     }
     )
   }
 
-  def render(document: Document, game: Game): Element = {
-    val res = document.createElement("table")
+  def render(document: Document, m: Model, views: Views): Unit = {
+    val game = m.game
+    val newTable = document.createElement("table")
     game.cells.foreach(row => {
       val rowEl = document.createElement("tr")
       row.foreach(cell => {
@@ -60,8 +65,19 @@ object TutorialApp {
         cellEl.textContent = cell.fold("-")(_.toString)
         rowEl.appendChild(cellEl)
       })
-      res.appendChild(rowEl)
+      newTable.appendChild(rowEl)
     })
-    res
+
+    val prev = views.table.firstElementChild
+    if (prev != null) {
+      views.table.removeChild(prev)
+    }
+    views.table.appendChild(newTable)
+    views.score.textContent = model.game.score.toString
+    if (model.lost) {
+      views.lost.textContent = "lost!"
+    }
+
+
   }
 }

@@ -16,7 +16,7 @@ case class Game(cells: Board, score: Int) {
         val withNextCell = addNewCell(newBoard)
         val newScore = score + plusScore
         val isFinished = Seq(Up, Down, Left, Right)
-          .exists(d => ShiftUtil.shift(withNextCell, d).isDefined)
+          .forall(d => ShiftUtil.shift(withNextCell, d).isEmpty)
         Moved(Game(withNextCell, newScore), isFinished)
       }
       case None => NoEffect
